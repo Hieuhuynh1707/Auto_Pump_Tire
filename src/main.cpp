@@ -255,5 +255,5 @@ void setup()
 void loop() {
   canReceive();
   server.handleClient();
-  delay(10);  // Tránh loop quá nhanh, cho ESP32 nghỉ
+  delay(10); 
 }
