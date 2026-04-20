@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hệ Thống Bơm Lốp Tự Động</title>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;…;700&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
   --red:#e53935; --red-dark:#b71c1c;
@@ -51,10 +51,37 @@ main{padding-top:80px;min-height:100vh;display:flex;align-items:flex-start;justi
 
 /* BRAND GRID */
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.btn-brand{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 10px;color:var(--text);font-family:'Be Vietnam Pro',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;}
-.btn-brand:hover{border-color:var(--red);background:rgba(229,57,53,.08);transform:translateY(-2px);}
-.btn-brand .icon{font-size:22px;}
-.btn-brand .sub{font-size:11px;color:var(--text-dim);}
+/* 1. Class tổng cho nút hãng xe */
+.btn-brand {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 10px;
+    color: var(--text);
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 22px; /* Kích thước tên hãng xe */
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+}
+
+/* 2. Định dạng cho Icon (Cần đóng ngoặc ở đây) */
+.btn-brand .icon {
+    font-size: 22px;
+    display: block; /* Thêm cái này để icon nằm riêng một dòng đẹp hơn */
+}
+
+/* 3. Định dạng cho dòng chữ phụ (Ví dụ: 8 dòng xe) */
+.btn-brand .sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 400; /* Cho chữ phụ mảnh lại để nổi bật tên hãng */
+}
 
 /* MODEL LIST */
 .model-list{display:flex;flex-direction:column;gap:8px;max-height:380px;overflow-y:auto;padding-right:4px;}
@@ -137,13 +164,14 @@ main{padding-top:80px;min-height:100vh;display:flex;align-items:flex-start;justi
 <header>
   <div class="logo">
     <div class="logo-icon">🚗</div>
-    AUTO PUMP
+    NCKH SINH VIEN 2026
   </div>
-  <div class="pressure-widget">
-    <div class="pressure-dot"></div>
+
+  <div class="pressure-widget" id="mainWidget" style="padding: 12px 20px; border-radius: 16px; min-width: 160px; border: 2px solid #8b949e; transition: all 0.3s;">
+    <div class="pressure-dot" style="width: 12px; height: 12px;"></div>
     <div>
-      <div class="pressure-label">ÁP SUẤT HIỆN TẠI</div>
-      <div class="pressure-val" id="headerPsi">-- <span>PSI</span></div>
+      <div class="pressure-label" style="font-size: 12px; font-weight: 600; letter-spacing: 0.5px;">ÁP SUẤT HIỆN TẠI</div>
+      <div class="pressure-val" id="headerPsi" style="font-size: 34px; line-height: 1; transition: all 0.3s;">-- <span style="font-size: 14px;">PSI</span></div>
     </div>
   </div>
 </header>
@@ -163,7 +191,7 @@ main{padding-top:80px;min-height:100vh;display:flex;align-items:flex-start;justi
           <div class="step-badge">BƯỚC 1 / 3</div>
           <div class="card-title">Chọn hãng xe</div>
         </div>
-        <div class="card-body">
+<div class="card-body">
           <div class="search-wrap">
             <div class="search-icon">🔍</div>
             <input class="search-input" id="searchBrand" placeholder="Tìm hãng xe..." oninput="filterBrand()">
@@ -230,7 +258,7 @@ main{padding-top:80px;min-height:100vh;display:flex;align-items:flex-start;justi
 
           <div class="status-bar ok" id="statusBar">
             <span id="statusIcon">ℹ️</span>
-            <span id="statusText">Đang kiểm tra áp suất...</span>
+<span id="statusText">Đang kiểm tra áp suất...</span>
           </div>
 
           <button class="btn btn-primary" onclick="startPump(false)">
@@ -379,10 +407,10 @@ function updateStepDots(a) {
 // STEP 1 — BRANDS
 // ============================================================
 const brandIcons = {
-  Honda:'🔴', Toyota:'🔵', Mazda:'🟠', Ford:'🟡', Hyundai:'🟢', Kia:'⚪',
-  VinFast:'🇻🇳', Suzuki:'🔶', Mitsubishi:'🔷', 'Mercedes-Benz':'⭐',
-  BMW:'🔘', Audi:'🔲', Lexus:'💎', Subaru:'🌟', Chevrolet:'🏅',
-  Peugeot:'🦁', Porsche:'🏎️'
+Honda:'', Toyota:'', Mazda:'', Ford:'', Hyundai:'', Kia:'',
+  VinFast:'🇻🇳', Suzuki:'', Mitsubishi:'', 'Mercedes-Benz':'',
+  BMW:'', Audi:'', Lexus:'', Subaru:'', Chevrolet:'',
+  Peugeot:'', Porsche:''
 };
 function getBrandIcon(b) { return brandIcons[b] || '🚘'; }
 
@@ -401,11 +429,10 @@ function renderBrands(filter = '') {
     const count = brands[b].length;
     const btn = document.createElement('button');
     btn.className = 'btn-brand';
-    btn.innerHTML = `<span class="icon">${getBrandIcon(b)}</span>
-                     <span>${b}</span>
-                     <span class="sub">${count} dòng xe</span>`;
-    btn.onclick = () => selectBrand(b);
-    grid.appendChild(btn);
+btn.innerHTML = `<span>${b}</span>
+                 <span class="sub">${count} dòng xe</span>`;
+btn.onclick = () => selectBrand(b);
+grid.appendChild(btn);
   });
 }
 function filterBrand() { renderBrands(document.getElementById('searchBrand').value); }
@@ -458,7 +485,7 @@ function selectModel(m) {
 // ============================================================
 function buildResult() {
   document.getElementById('r-car').textContent = state.brand + ' ' + state.model;
-  document.getElementById('r-front').textContent = state.frontPsi;
+document.getElementById('r-front').textContent = state.frontPsi;
   document.getElementById('r-rear').textContent  = state.rearPsi;
   document.getElementById('v3Sub').textContent = state.brand + ' ' + state.model;
 
@@ -521,7 +548,6 @@ function validateCustom() {
   if (val > max) { val = max; alert(`⚠️ Tối đa ${max} PSI (105% đề xuất)`); }
   document.getElementById('customPsi').value = val.toFixed(0);
 }
-
 // ============================================================
 // PUMP
 // ============================================================
@@ -595,7 +621,7 @@ function pollPressure() {
     .catch(() => {
       // Demo: dao động nhỏ khi mất kết nối
       if (state.currentPsi > 0)
-        state.currentPsi = +(state.currentPsi + (Math.random() - 0.5) * 0.1).toFixed(2);
+state.currentPsi = +(state.currentPsi + (Math.random() - 0.5) * 0.1).toFixed(2);
       refreshPsiHeader();
     });
 }
