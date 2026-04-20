@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hệ Thống Bơm Lốp Tự Động</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red:#e53935; --red-dark:#b71c1c;
+  --green-light:#43a047;
+  --bg:#0d1117; --surface:#161b22; --surface2:#1f2937;
+  --border:rgba(255,255,255,0.08); --text:#e6edf3; --text-dim:#8b949e;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(229,57,53,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(229,57,53,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+
+/* HEADER */
+header{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(13,17,23,0.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--red);letter-spacing:1px;display:flex;align-items:center;gap:10px;}
+.logo-icon{width:34px;height:34px;background:var(--red);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;}
+.pressure-widget{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:8px 16px;display:flex;align-items:center;gap:12px;}
+.pressure-dot{width:8px;height:8px;background:#43a047;border-radius:50%;box-shadow:0 0 6px #43a047;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.pressure-label{font-size:11px;color:var(--text-dim);}
+.pressure-val{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;}
+.pressure-val span{font-size:12px;color:var(--text-dim);font-weight:400;}
+
+/* MAIN */
+main{padding-top:80px;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding-bottom:40px;position:relative;z-index:1;}
+.steps-indicator{display:flex;align-items:center;gap:6px;padding:0 28px;margin-bottom:-8px;margin-top:16px;}
+.step-dot{height:3px;flex:1;background:var(--border);border-radius:2px;transition:background .3s;}
+.step-dot.done{background:var(--red);}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:520px;margin:20px 16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.5);}
+.card-header{background:linear-gradient(135deg,var(--red-dark),var(--red));padding:22px 28px;position:relative;overflow:hidden;}
+.card-header::after{content:'';position:absolute;right:-30px;top:-30px;width:120px;height:120px;border:2px solid rgba(255,255,255,.1);border-radius:50%;}
+.step-badge{font-size:11px;font-weight:600;letter-spacing:2px;color:rgba(255,255,255,.7);margin-bottom:4px;}
+.card-title{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;color:white;}
+.card-subtitle{font-size:13px;color:rgba(255,255,255,.7);margin-top:4px;}
+.card-body{padding:24px;}
+
+/* SEARCH */
+.search-wrap{position:relative;margin-bottom:18px;}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-dim);}
+.search-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 16px 11px 40px;font-size:14px;color:var(--text);font-family:'Be Vietnam Pro',sans-serif;transition:border-color .2s;outline:none;}
+.search-input:focus{border-color:var(--red);}
+.search-input::placeholder{color:var(--text-dim);}
+
+/* BRAND GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.btn-brand{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 10px;color:var(--text);font-family:'Be Vietnam Pro',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;}
+.btn-brand:hover{border-color:var(--red);background:rgba(229,57,53,.08);transform:translateY(-2px);}
+.btn-brand .icon{font-size:22px;}
+.btn-brand .sub{font-size:11px;color:var(--text-dim);}
+
+/* MODEL LIST */
+.model-list{display:flex;flex-direction:column;gap:8px;max-height:380px;overflow-y:auto;padding-right:4px;}
+.model-list::-webkit-scrollbar{width:4px;}
+.model-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.model-item{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:13px 16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:space-between;}
+.model-item:hover{border-color:var(--red);background:rgba(229,57,53,.08);}
+.model-name{font-size:15px;font-weight:500;}
+.model-psi-tag{display:flex;gap:6px;}
+.psi-badge{background:rgba(229,57,53,.12);border:1px solid rgba(229,57,53,.25);color:var(--red);font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px;}
+
+/* RESULT */
+.result-panel{background:var(--surface2);border-radius:14px;padding:20px;margin-bottom:16px;}
+.result-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);}
+.result-row:last-child{border-bottom:none;}
+.result-key{font-size:13px;color:var(--text-dim);}
+.result-val{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:600;}
+
+/* PSI CARDS */
+.psi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.psi-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;transition:all .2s;cursor:pointer;}
+.psi-card:hover{border-color:var(--red);}
+.psi-card.selected{border-color:var(--red);background:rgba(229,57,53,.06);}
+.psi-card-label{font-size:11px;color:var(--text-dim);margin-bottom:8px;letter-spacing:.5px;}
+.psi-card-val{font-family:'Rajdhani',sans-serif;font-size:34px;font-weight:700;color:var(--red);line-height:1;}
+.psi-card-unit{font-size:12px;color:var(--text-dim);margin-top:3px;}
+.psi-card-hint{font-size:10px;color:var(--text-dim);margin-top:6px;}
+
+.status-bar{background:var(--bg);border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;margin-bottom:16px;font-size:13px;}
+.status-bar.ok{border-left:3px solid var(--green-light);}
+.status-bar.warn{border-left:3px solid #f9a825;}
+.status-bar.danger{border-left:3px solid var(--red);}
+
+/* CUSTOM */
+.custom-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;}
+.custom-title{font-size:12px;color:var(--text-dim);margin-bottom:10px;}
+.custom-row{display:flex;align-items:center;gap:10px;}
+.custom-btn{width:40px;height:40px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
+.custom-btn:hover{border-color:var(--red);color:var(--red);}
+.custom-display{flex:1;font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;text-align:center;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);outline:none;}
+.custom-hint{font-size:11px;color:var(--text-dim);text-align:center;margin-top:6px;}
+.note-warn{background:rgba(249,168,37,.08);border:1px solid rgba(249,168,37,.25);border-radius:10px;padding:10px 14px;font-size:12px;color:#f9a825;line-height:1.6;margin-top:10px;}
+
+/* BUTTONS */
+.btn{width:100%;padding:13px;border:none;border-radius:12px;font-family:'Be Vietnam Pro',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;}
+.btn-primary{background:linear-gradient(135deg,var(--red-dark),var(--red));color:white;box-shadow:0 4px 16px rgba(229,57,53,.3);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(229,57,53,.4);}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-secondary:hover{border-color:var(--text-dim);}
+.btn-outline{background:transparent;color:var(--text-dim);border:1px solid var(--border);font-size:13px;padding:11px;}
+.btn-outline:hover{color:var(--text);border-color:var(--text-dim);}
+.divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--text-dim);font-size:12px;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* PUMP OVERLAY */
+.pump-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;align-items:center;justify-content:center;backdrop-filter:blur(8px);}
+.pump-overlay.active{display:flex;}
+.pump-modal{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:44px 36px;text-align:center;max-width:360px;width:90%;}
+.pump-ring{width:110px;height:110px;border-radius:50%;border:4px solid var(--border);border-top-color:var(--red);animation:spin .8s linear infinite;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:36px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pump-title{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:var(--red);margin-bottom:6px;}
+.pump-psi{font-family:'Rajdhani',sans-serif;font-size:44px;font-weight:700;margin:14px 0 4px;}
+.pump-progress{background:var(--bg);border-radius:8px;height:8px;margin:18px 0;overflow:hidden;}
+.pump-bar{height:100%;background:linear-gradient(90deg,var(--red-dark),var(--red));border-radius:8px;width:0%;transition:width .3s;}
+.done-icon{width:76px;height:76px;background:rgba(67,160,71,.15);border:2px solid var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 18px;}
+
+/* LOADING */
+.loading{text-align:center;padding:40px 16px;color:var(--text-dim);}
+.loading-spin{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .6s linear infinite;margin:0 auto 12px;}
+
+.step-view{display:none;animation:fadeIn .25s ease;}
+.step-view.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.empty{text-align:center;padding:28px 16px;color:var(--text-dim);font-size:14px;}
+.error-box{background:rgba(229,57,53,.08);border:1px solid rgba(229,57,53,.3);border-radius:10px;padding:14px;font-size:13px;color:#ef9a9a;text-align:center;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🚗</div>
+    AUTO PUMP
+  </div>
+  <div class="pressure-widget">
+    <div class="pressure-dot"></div>
+    <div>
+      <div class="pressure-label">ÁP SUẤT HIỆN TẠI</div>
+      <div class="pressure-val" id="headerPsi">-- <span>PSI</span></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div style="width:100%;max-width:520px;margin:0 16px;">
+    <div class="steps-indicator">
+      <div class="step-dot" id="sd1"></div>
+      <div class="step-dot" id="sd2"></div>
+      <div class="step-dot" id="sd3"></div>
+    </div>
+    <div class="card">
+
+      <!-- STEP 1: Hãng xe -->
+      <div class="step-view active" id="view1">
+        <div class="card-header">
+          <div class="step-badge">BƯỚC 1 / 3</div>
+          <div class="card-title">Chọn hãng xe</div>
+        </div>
+        <div class="card-body">
+          <div class="search-wrap">
+            <div class="search-icon">🔍</div>
+            <input class="search-input" id="searchBrand" placeholder="Tìm hãng xe..." oninput="filterBrand()">
+          </div>
+          <div id="brandGrid">
+            <div class="loading"><div class="loading-spin"></div>Đang tải dữ liệu...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Dòng xe -->
+      <div class="step-view" id="view2">
+        <div class="card-header">
+          <div class="step-badge">BƯỚC 2 / 3</div>
+          <div class="card-title" id="v2Title">Chọn dòng xe</div>
+          <div class="card-subtitle" id="v2Sub"></div>
+        </div>
+        <div class="card-body">
+          <div class="search-wrap">
+            <div class="search-icon">🔍</div>
+            <input class="search-input" id="searchModel" placeholder="Tìm dòng xe..." oninput="filterModel()">
+          </div>
+          <div class="model-list" id="modelList"></div>
+          <button class="btn btn-outline" onclick="goStep(1)" style="margin-top:14px">⬅ Quay lại</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Kết quả & Bơm -->
+      <div class="step-view" id="view3">
+        <div class="card-header">
+          <div class="step-badge">BƯỚC 3 / 3</div>
+          <div class="card-title">Kết quả & Bơm lốp</div>
+          <div class="card-subtitle" id="v3Sub"></div>
+        </div>
+        <div class="card-body">
+
+          <div class="result-panel">
+            <div class="result-row">
+              <span class="result-key">Xe</span>
+              <span class="result-val" id="r-car">--</span>
+            </div>
+            <div class="result-row">
+              <span class="result-key">Áp suất hiện tại</span>
+              <span class="result-val" id="r-current">-- PSI</span>
+            </div>
+          </div>
+
+          <!-- PSI cards — click để chọn vị trí bơm -->
+          <div style="font-size:12px;color:var(--text-dim);margin-bottom:10px;">🎯 Áp suất khuyến nghị — <b>Nhấn để chọn vị trí bơm</b></div>
+          <div class="psi-grid">
+            <div class="psi-card selected" id="card-front" onclick="selectPos('front')">
+              <div class="psi-card-label">🔵 BÁNH TRƯỚC</div>
+              <div class="psi-card-val" id="r-front">--</div>
+              <div class="psi-card-unit">PSI</div>
+              <div class="psi-card-hint" id="hint-front"></div>
+            </div>
+            <div class="psi-card" id="card-rear" onclick="selectPos('rear')">
+              <div class="psi-card-label">🔴 BÁNH SAU</div>
+              <div class="psi-card-val" id="r-rear">--</div>
+              <div class="psi-card-unit">PSI</div>
+              <div class="psi-card-hint" id="hint-rear"></div>
+            </div>
+          </div>
+
+          <div class="status-bar ok" id="statusBar">
+            <span id="statusIcon">ℹ️</span>
+            <span id="statusText">Đang kiểm tra áp suất...</span>
+          </div>
+
+          <button class="btn btn-primary" onclick="startPump(false)">
+            ▶ BƠM THEO ĐỀ XUẤT
+          </button>
+
+          <div class="divider">hoặc tự chỉnh mục tiêu</div>
+
+          <div class="custom-wrap">
+            <div class="custom-title">⚙️ Bơm theo nhu cầu (tối đa +5% áp suất đề xuất)</div>
+            <div class="custom-row">
+              <button class="custom-btn" onclick="adjustCustom(-1)">−</button>
+              <input class="custom-display" id="customPsi" type="number" onchange="validateCustom()">
+              <button class="custom-btn" onclick="adjustCustom(1)">+</button>
+            </div>
+            <div class="custom-hint" id="customHint">--</div>
+          </div>
+          <div class="note-warn">⚠️ Không được vượt quá 5% áp suất đề xuất để đảm bảo an toàn lốp xe.</div>
+
+          <button class="btn btn-secondary" onclick="startPump(true)" style="margin-top:10px">
+            ⚙️ BƠM THEO NHU CẦU
+          </button>
+          <button class="btn btn-outline" onclick="goStep(2)" style="margin-top:6px">⬅ Quay lại</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<!-- PUMP OVERLAY -->
+<div class="pump-overlay" id="pumpOverlay">
+  <div class="pump-modal">
+    <div id="pumpingState">
+      <div class="pump-ring">🔧</div>
+      <div class="pump-title">ĐANG BƠM...</div>
+      <div style="color:var(--text-dim);font-size:13px;margin-bottom:4px;">
+        Vị trí: <span id="posLabel">--</span> &nbsp;|&nbsp; Mục tiêu: <span id="targetLabel">--</span> PSI
+      </div>
+      <div class="pump-psi" id="livePsi">--</div>
+      <div style="font-size:12px;color:var(--text-dim);">PSI hiện tại</div>
+      <div class="pump-progress"><div class="pump-bar" id="pumpBar"></div></div>
+      <button class="btn btn-outline" onclick="cancelPump()" style="margin-top:0">⛔ Dừng bơm</button>
+    </div>
+    <div id="doneState" style="display:none">
+      <div class="done-icon">✅</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:#43a047;margin-bottom:8px;">HOÀN TẤT!</div>
+      <div style="font-size:14px;color:var(--text-dim);margin-bottom:22px;">Lốp xe đã đạt áp suất mong muốn.</div>
+      <button class="btn btn-primary" onclick="finishPump()">🏁 Xong</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let allData    = [];   // raw array từ cars.json
+let brands     = {};   // { "Honda": [ {model, front, rear}, ... ] }
+let state = {
+  brand: '', model: '', frontPsi: 0, rearPsi: 0,
+  selectedPos: 'front', currentPsi: 0, pumpInterval: null
+};
+
+// ============================================================
+// KHỞI TẠO — load cars.json
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  updateStepDots(1);
+  loadCarsJson();
+  pollPressure();
+  setInterval(pollPressure, 2000);
+});
+
+async function loadCarsJson() {
+  try {
+    const res = await fetch('/cars.json');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    allData = await res.json();
+    processCarsData(allData);
+    renderBrands();
+  } catch(e) {
+    document.getElementById('brandGrid').innerHTML =
+      `<div class="error-box">⚠️ Không tải được cars.json<br><small>${e.message}</small></div>`;
+  }
+}
+
+// Chuyển mảng JSON thành map brand → [models]
+// Hỗ trợ 2 format:
+//   Format A (dùng point): { brand, model, pressure, point }
+//   Format B (dùng front/rear trực tiếp): { brand, model, front, rear }
+function processCarsData(data) {
+  brands = {};
+  const tmp = {}; // tmp[brand][model] = { front: [], rear: [] }
+
+  data.forEach(item => {
+    const brand = (item.brand || '').trim();
+    const model = (item.model || '').trim();
+    if (!brand || !model) return;
+
+    if (!tmp[brand]) tmp[brand] = {};
+    if (!tmp[brand][model]) tmp[brand][model] = { frontArr: [], rearArr: [] };
+
+    if (item.point !== undefined) {
+      // Format A
+      const pt = (item.point || '').toLowerCase();
+      if (pt.includes('front')) tmp[brand][model].frontArr.push(Number(item.pressure));
+      else if (pt.includes('rear')) tmp[brand][model].rearArr.push(Number(item.pressure));
+    } else {
+      // Format B
+      if (item.front) tmp[brand][model].frontArr.push(Number(item.front));
+      if (item.rear)  tmp[brand][model].rearArr.push(Number(item.rear));
+    }
+  });
+
+  // Lấy trung bình (hoặc max) cho mỗi model
+  Object.keys(tmp).forEach(brand => {
+    brands[brand] = [];
+    Object.keys(tmp[brand]).forEach(model => {
+      const fa = tmp[brand][model].frontArr.filter(v => !isNaN(v) && v > 0);
+      const ra = tmp[brand][model].rearArr.filter(v => !isNaN(v) && v > 0);
+      const front = fa.length ? Math.round(fa.reduce((a,b)=>a+b,0)/fa.length) : 0;
+      const rear  = ra.length ? Math.round(ra.reduce((a,b)=>a+b,0)/ra.length) : 0;
+      brands[brand].push({ model, front, rear });
+    });
+    // Sort model A-Z
+    brands[brand].sort((a,b) => a.model.localeCompare(b.model));
+  });
+}
+
+// ============================================================
+// STEP NAVIGATION
+// ============================================================
+function goStep(n) {
+  document.querySelectorAll('.step-view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view' + n).classList.add('active');
+  updateStepDots(n);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function updateStepDots(a) {
+  for (let i = 1; i <= 3; i++)
+    document.getElementById('sd' + i).classList.toggle('done', i <= a);
+}
+
+// ============================================================
+// STEP 1 — BRANDS
+// ============================================================
+const brandIcons = {
+  Honda:'🔴', Toyota:'🔵', Mazda:'🟠', Ford:'🟡', Hyundai:'🟢', Kia:'⚪',
+  VinFast:'🇻🇳', Suzuki:'🔶', Mitsubishi:'🔷', 'Mercedes-Benz':'⭐',
+  BMW:'🔘', Audi:'🔲', Lexus:'💎', Subaru:'🌟', Chevrolet:'🏅',
+  Peugeot:'🦁', Porsche:'🏎️'
+};
+function getBrandIcon(b) { return brandIcons[b] || '🚘'; }
+
+function renderBrands(filter = '') {
+  const grid = document.getElementById('brandGrid');
+  const kw = filter.toLowerCase();
+  const list = Object.keys(brands).filter(b => b.toLowerCase().includes(kw));
+
+  if (!list.length) {
+    grid.innerHTML = '<div class="empty">Không tìm thấy hãng xe</div>';
+    return;
+  }
+  grid.className = 'grid-2';
+  grid.innerHTML = '';
+  list.forEach(b => {
+    const count = brands[b].length;
+    const btn = document.createElement('button');
+    btn.className = 'btn-brand';
+    btn.innerHTML = `<span class="icon">${getBrandIcon(b)}</span>
+                     <span>${b}</span>
+                     <span class="sub">${count} dòng xe</span>`;
+    btn.onclick = () => selectBrand(b);
+    grid.appendChild(btn);
+  });
+}
+function filterBrand() { renderBrands(document.getElementById('searchBrand').value); }
+function selectBrand(b) {
+  state.brand = b;
+  document.getElementById('v2Title').textContent = 'Dòng xe ' + b;
+  document.getElementById('v2Sub').textContent = brands[b].length + ' dòng xe';
+  document.getElementById('searchModel').value = '';
+  renderModels('');
+  goStep(2);
+}
+
+// ============================================================
+// STEP 2 — MODELS
+// ============================================================
+function renderModels(filter) {
+  const list = document.getElementById('modelList');
+  const kw = filter.toLowerCase();
+  const items = brands[state.brand].filter(m => m.model.toLowerCase().includes(kw));
+
+  if (!items.length) {
+    list.innerHTML = '<div class="empty">Không tìm thấy dòng xe</div>';
+    return;
+  }
+  list.innerHTML = '';
+  items.forEach(m => {
+    const el = document.createElement('div');
+    el.className = 'model-item';
+    el.innerHTML = `
+      <span class="model-name">${m.model}</span>
+      <span class="model-psi-tag">
+        <span class="psi-badge">F: ${m.front} PSI</span>
+        <span class="psi-badge" style="background:rgba(30,136,229,.12);border-color:rgba(30,136,229,.3);color:#64b5f6;">R: ${m.rear} PSI</span>
+      </span>`;
+    el.onclick = () => selectModel(m);
+    list.appendChild(el);
+  });
+}
+function filterModel() { renderModels(document.getElementById('searchModel').value); }
+function selectModel(m) {
+  state.model    = m.model;
+  state.frontPsi = m.front;
+  state.rearPsi  = m.rear;
+  buildResult();
+  goStep(3);
+}
+
+// ============================================================
+// STEP 3 — RESULT & PUMP
+// ============================================================
+function buildResult() {
+  document.getElementById('r-car').textContent = state.brand + ' ' + state.model;
+  document.getElementById('r-front').textContent = state.frontPsi;
+  document.getElementById('r-rear').textContent  = state.rearPsi;
+  document.getElementById('v3Sub').textContent = state.brand + ' ' + state.model;
+
+  const fMax = +(state.frontPsi * 1.05).toFixed(1);
+  const rMax = +(state.rearPsi  * 1.05).toFixed(1);
+  document.getElementById('hint-front').textContent = 'Tối đa: ' + fMax + ' PSI';
+  document.getElementById('hint-rear').textContent  = 'Tối đa: ' + rMax + ' PSI';
+
+  selectPos('front');
+  updateStatus();
+}
+
+function selectPos(pos) {
+  state.selectedPos = pos;
+  document.getElementById('card-front').classList.toggle('selected', pos === 'front');
+  document.getElementById('card-rear').classList.toggle('selected', pos === 'rear');
+  const target = pos === 'front' ? state.frontPsi : state.rearPsi;
+  const max    = +(target * 1.05).toFixed(1);
+  document.getElementById('customPsi').value = target;
+  document.getElementById('customHint').textContent = `Cho phép: ${target} – ${max} PSI`;
+  updateStatus();
+}
+
+function updateStatus() {
+  const cur    = state.currentPsi;
+  const target = state.selectedPos === 'front' ? state.frontPsi : state.rearPsi;
+  document.getElementById('r-current').textContent = cur > 0 ? cur.toFixed(1) + ' PSI' : '-- PSI';
+  if (!target || cur <= 0) return;
+  const bar  = document.getElementById('statusBar');
+  const icon = document.getElementById('statusIcon');
+  const txt  = document.getElementById('statusText');
+  const pos  = state.selectedPos === 'front' ? 'trước' : 'sau';
+  if (cur < target * 0.9) {
+    bar.className = 'status-bar danger'; icon.textContent = '🔴';
+    txt.textContent = `Bánh ${pos}: thiếu ${(target-cur).toFixed(1)} PSI — Cần bơm ngay!`;
+  } else if (cur < target) {
+    bar.className = 'status-bar warn'; icon.textContent = '🟡';
+    txt.textContent = `Bánh ${pos}: hơi thấp, thiếu ${(target-cur).toFixed(1)} PSI`;
+  } else if (cur <= target * 1.05) {
+    bar.className = 'status-bar ok'; icon.textContent = '🟢';
+    txt.textContent = `Bánh ${pos}: áp suất đang tốt ✓`;
+  } else {
+    bar.className = 'status-bar danger'; icon.textContent = '🔴';
+    txt.textContent = `Bánh ${pos}: vượt mức! Cần xả bớt`;
+  }
+}
+
+function adjustCustom(d) {
+  const base = state.selectedPos === 'front' ? state.frontPsi : state.rearPsi;
+  const max  = +(base * 1.05).toFixed(1);
+  let val    = parseFloat(document.getElementById('customPsi').value) + d;
+  val = Math.max(base, Math.min(max, val));
+  document.getElementById('customPsi').value = val.toFixed(0);
+}
+function validateCustom() {
+  const base = state.selectedPos === 'front' ? state.frontPsi : state.rearPsi;
+  const max  = +(base * 1.05).toFixed(1);
+  let val    = parseFloat(document.getElementById('customPsi').value);
+  if (isNaN(val) || val < base) val = base;
+  if (val > max) { val = max; alert(`⚠️ Tối đa ${max} PSI (105% đề xuất)`); }
+  document.getElementById('customPsi').value = val.toFixed(0);
+}
+
+// ============================================================
+// PUMP
+// ============================================================
+function startPump(custom) {
+  const base   = state.selectedPos === 'front' ? state.frontPsi : state.rearPsi;
+  const max    = +(base * 1.05).toFixed(1);
+  const target = custom ? parseFloat(document.getElementById('customPsi').value) : base;
+  if (target > max) { alert(`⚠️ Vượt giới hạn! Tối đa ${max} PSI`); return; }
+
+  const posName = state.selectedPos === 'front' ? 'Bánh trước' : 'Bánh sau';
+  document.getElementById('posLabel').textContent    = posName;
+  document.getElementById('targetLabel').textContent = target;
+  document.getElementById('livePsi').textContent     = state.currentPsi > 0 ? state.currentPsi.toFixed(1) : '--';
+  document.getElementById('pumpBar').style.width     = '0%';
+  document.getElementById('pumpingState').style.display = 'block';
+  document.getElementById('doneState').style.display    = 'none';
+  document.getElementById('pumpOverlay').classList.add('active');
+
+  // Gửi lệnh bơm tới ESP32 qua CAN
+  fetch(`/pump?cmd=auto&target=${target}`).catch(() => {});
+
+  // Polling áp suất thực từ STM32 qua CAN
+  const startPsi = state.currentPsi > 0 ? state.currentPsi : 0;
+  state.pumpInterval = setInterval(() => {
+    fetch('/current')
+      .then(r => r.json())
+      .then(data => {
+        const cur = data.pressure;
+        if (!isNaN(cur) && cur > 0) {
+          state.currentPsi = cur;
+          const pct = startPsi < target
+            ? Math.min(((cur - startPsi) / (target - startPsi)) * 100, 100)
+            : 100;
+          document.getElementById('livePsi').textContent = cur.toFixed(1);
+          document.getElementById('pumpBar').style.width = pct + '%';
+          if (cur >= target) {
+            clearInterval(state.pumpInterval);
+            showDone();
+          }
+        }
+      })
+      .catch(() => {});
+  }, 300);
+}
+function cancelPump() {
+  clearInterval(state.pumpInterval);
+  fetch('/pump?cmd=off').catch(() => {});
+  document.getElementById('pumpOverlay').classList.remove('active');
+}
+function showDone() {
+  document.getElementById('pumpingState').style.display = 'none';
+  document.getElementById('doneState').style.display    = 'block';
+}
+function finishPump() {
+  document.getElementById('pumpOverlay').classList.remove('active');
+  goStep(1);
+  document.getElementById('searchBrand').value = '';
+  renderBrands();
+}
+
+// ============================================================
+// PRESSURE POLLING
+// ============================================================
+function pollPressure() {
+  fetch('/current')
+    .then(r => r.json())
+    .then(data => {
+      if (!isNaN(data.pressure) && data.pressure > 0) state.currentPsi = data.pressure;
+      refreshPsiHeader();
+    })
+    .catch(() => {
+      // Demo: dao động nhỏ khi mất kết nối
+      if (state.currentPsi > 0)
+        state.currentPsi = +(state.currentPsi + (Math.random() - 0.5) * 0.1).toFixed(2);
+      refreshPsiHeader();
+    });
+}
+function refreshPsiHeader() {
+  const el = document.getElementById('headerPsi');
+  el.innerHTML = state.currentPsi > 0
+    ? state.currentPsi.toFixed(1) + ' <span>PSI</span>'
+    : '-- <span>PSI</span>';
+  if (document.getElementById('view3').classList.contains('active')) updateStatus();
+}
+</script>
+</body>
+</html>
