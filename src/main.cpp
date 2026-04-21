@@ -485,7 +485,8 @@ void setup() {
 
   WiFi.mode(WIFI_AP);
   WiFi.softAP(ssid, password);
-
+  Serial.print("AP IP: ");
+  Serial.println(WiFi.softAPIP());
   server.on("/", HTTP_GET, []() {
     File f = SPIFFS.open("/index.html", FILE_READ);
     if (!f) { server.send(404, "text/plain", "Not found"); return; }
@@ -580,13 +581,26 @@ void setup() {
     if (f && f.size() > 0) { deserializeJson(doc, f); f.close(); }
     else { if (f) f.close(); }
 
-    String result = "[]";
-    if (doc.containsKey(plate)) serializeJson(doc[plate], result);
+   String result;
+     if (doc.containsKey(plate)) serializeJson(doc[plate], result);
+     else result = "[]";  
 
     server.sendHeader("Access-Control-Allow-Origin", "*");
     server.send(200, "application/json", result);
   });
-
+    server.on("/settime", HTTP_GET, []() {
+    String y = server.arg("y"), mo = server.arg("mo"), d = server.arg("d");
+    String h = server.arg("h"), mi = server.arg("mi"), s = server.arg("s");
+    if (y.length() && mo.length() && d.length()) {
+        RtcDateTime dt(y.toInt(), mo.toInt(), d.toInt(),
+                       h.toInt(), mi.toInt(), s.toInt());
+        Rtc.SetDateTime(dt);
+        server.sendHeader("Access-Control-Allow-Origin", "*");
+        server.send(200, "text/plain", "OK");
+    } else {
+        server.send(400, "text/plain", "missing params");
+    }
+});
   server.begin();
 
   currentPressure = readPressurePSI();
